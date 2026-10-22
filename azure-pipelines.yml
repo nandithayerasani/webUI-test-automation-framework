@@ -1,0 +1,76 @@
+# Azure DevOps pipeline for the Web UI tests.
+# For BrowserStack runs, create a variable group named "browserstack" (Pipelines > Library)
+# with secret variables BROWSERSTACK_USERNAME and BROWSERSTACK_ACCESS_KEY.
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+parameters:
+  - name: browser
+    displayName: Browser
+    type: string
+    default: chrome
+    values: [chrome, edge, firefox]
+  - name: privateMode
+    displayName: Private mode (incognito / InPrivate)
+    type: boolean
+    default: false
+  - name: headless
+    displayName: Headless
+    type: boolean
+    default: true
+  - name: execution
+    displayName: Execution
+    type: string
+    default: local
+    values: [local, browserstack]
+  - name: suite
+    displayName: TestNG suite file
+    type: string
+    default: src/test/resources/testng.xml
+
+variables:
+  - ${{ if eq(parameters.execution, 'browserstack') }}:
+      - group: browserstack
+
+pool:
+  # Microsoft-hosted Ubuntu agents come with Chrome, Edge and Firefox installed.
+  vmImage: ubuntu-latest
+
+steps:
+  - task: Maven@4
+    displayName: Run tests
+    inputs:
+      mavenPomFile: pom.xml
+      goals: clean test
+      options: >-
+        -B
+        -DsuiteXmlFile=${{ parameters.suite }}
+        -Dbrowser=${{ parameters.browser }}
+        -Dprivate.mode=${{ parameters.privateMode }}
+        -Dheadless=${{ parameters.headless }}
+        -Dexecution=${{ parameters.execution }}
+      javaHomeOption: JDKVersion
+      jdkVersionOption: '1.17'
+      publishJUnitResults: true
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
+      testRunTitle: 'Web UI - ${{ parameters.browser }}'
+    env:
+      # Secret variables are not exposed to scripts unless mapped explicitly.
+      BROWSERSTACK_USERNAME: $(BROWSERSTACK_USERNAME)
+      BROWSERSTACK_ACCESS_KEY: $(BROWSERSTACK_ACCESS_KEY)
+
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Extent report and screenshots
+    condition: always()
+    inputs:
+      targetPath: reports
+      artifact: extent-report-$(System.JobAttempt)
+      publishLocation: pipeline
