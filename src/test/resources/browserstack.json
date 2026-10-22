@@ -1,0 +1,16 @@
+{
+  "hubUrl": "https://hub.browserstack.com/wd/hub",
+  "capabilities": {
+    "browserVersion": "latest",
+    "bstack:options": {
+      "os": "Windows",
+      "osVersion": "11",
+      "projectName": "Web UI Test Automation",
+      "buildName": "Local build",
+      "sessionName": "Web UI tests",
+      "seleniumVersion": "4.25.0",
+      "debug": true,
+      "networkLogs": true
+    }
+  }
+}

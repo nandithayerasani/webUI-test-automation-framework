@@ -1,0 +1,36 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Web UI Automation Suite" parallel="methods" thread-count="3">
+
+    <listeners>
+        <listener class-name="listeners.TestListener"/>
+    </listeners>
+
+    <!--
+        Parameters are optional. Leave them out to use config.properties.
+        browser:     chrome | edge | firefox
+        privateMode: true (incognito / InPrivate / private) | false
+    -->
+    <test name="Chrome">
+        <parameter name="browser" value="chrome"/>
+        <classes>
+            <class name="tests.LoginTest"/>
+        </classes>
+    </test>
+
+    <!-- Fast checks of framework helpers. They don't open a browser. -->
+    <test name="Framework unit tests">
+        <classes>
+            <class name="tests.unit.MfaUtilsTest"/>
+        </classes>
+    </test>
+
+    <!-- Example: the same tests in Edge InPrivate. Uncomment to run.
+    <test name="Edge InPrivate">
+        <parameter name="browser" value="edge"/>
+        <parameter name="privateMode" value="true"/>
+        <classes>
+            <class name="tests.LoginTest"/>
+        </classes>
+    </test>
+    -->
+</suite>

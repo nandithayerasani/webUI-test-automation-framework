@@ -1,0 +1,1 @@
+Sample file used by upload tests.
