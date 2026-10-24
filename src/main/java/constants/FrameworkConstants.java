@@ -15,6 +15,8 @@ public final class FrameworkConstants {
     private static final Path PROJECT_DIR = Paths.get(System.getProperty("user.dir"));
 
     public static final String CONFIG_FILE = "config.properties";
+    /** Classpath folder holding one &lt;env&gt;.properties file per environment. */
+    public static final String ENVIRONMENTS_DIR = "environments";
     public static final String BROWSERSTACK_CONFIG_FILE = "browserstack.json";
 
     public static final Path TEST_DATA_DIR = PROJECT_DIR.resolve("src/test/resources/testdata");

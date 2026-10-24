@@ -11,6 +11,7 @@ pipeline {
     }
 
     parameters {
+        choice(name: 'ENV', choices: ['qa', 'sit', 'uat'], description: 'Environment to test')
         choice(name: 'BROWSER', choices: ['chrome', 'edge', 'firefox'], description: 'Browser to run on')
         booleanParam(name: 'PRIVATE_MODE', defaultValue: false, description: 'Incognito / InPrivate / private window')
         booleanParam(name: 'HEADLESS', defaultValue: true, description: 'Run without a visible browser window')
@@ -35,6 +36,7 @@ pipeline {
             steps {
                 script {
                     def mvnCmd = "mvn -B clean test" +
+                            " -Denv=${params.ENV}" +
                             " -DsuiteXmlFile=${params.SUITE}" +
                             " -Dbrowser=${params.BROWSER}" +
                             " -Dprivate.mode=${params.PRIVATE_MODE}" +

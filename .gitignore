@@ -27,3 +27,6 @@ test-output/
 reports/
 screenshots/
 logs/
+
+# Office lock files
+~$*

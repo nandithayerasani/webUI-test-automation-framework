@@ -38,8 +38,8 @@ public final class BrowserStack {
         Map<String, Object> capabilities = (Map<String, Object>) config.getOrDefault("capabilities", new HashMap<>());
         Map<String, Object> bstackOptions = new HashMap<>(
                 (Map<String, Object>) capabilities.getOrDefault("bstack:options", new HashMap<>()));
-        bstackOptions.put("userName", credential("BROWSERSTACK_USERNAME", "browserstack.username"));
-        bstackOptions.put("accessKey", credential("BROWSERSTACK_ACCESS_KEY", "browserstack.accesskey"));
+        bstackOptions.put("userName", ConfigReader.getSecret("BROWSERSTACK_USERNAME", "browserstack.username"));
+        bstackOptions.put("accessKey", ConfigReader.getSecret("BROWSERSTACK_ACCESS_KEY", "browserstack.accesskey"));
 
         capabilities.forEach((key, value) -> {
             if (!"bstack:options".equals(key)) {
@@ -68,16 +68,5 @@ public final class BrowserStack {
         } catch (IOException e) {
             throw new IllegalStateException("Could not read " + FrameworkConstants.BROWSERSTACK_CONFIG_FILE, e);
         }
-    }
-
-    private static String credential(String envVar, String configKey) {
-        String value = System.getenv(envVar);
-        if (value == null || value.isBlank()) {
-            value = ConfigReader.get(configKey, null);
-        }
-        if (value == null || value.isBlank()) {
-            throw new IllegalStateException("Set the " + envVar + " environment variable to run on BrowserStack");
-        }
-        return value;
     }
 }

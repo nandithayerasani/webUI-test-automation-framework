@@ -19,11 +19,12 @@ public final class WaitUtils {
     private WaitUtils() {
     }
 
-    private static WebDriverWait getWait() {
+    /** WebDriverWait with the configured "explicit.wait" timeout, for custom conditions. */
+    public static WebDriverWait getWait() {
         return getWait(ConfigReader.getInt("explicit.wait", FrameworkConstants.DEFAULT_EXPLICIT_WAIT_SECONDS));
     }
 
-    private static WebDriverWait getWait(int seconds) {
+    public static WebDriverWait getWait(int seconds) {
         return new WebDriverWait(DriverFactory.getDriver(), Duration.ofSeconds(seconds));
     }
 

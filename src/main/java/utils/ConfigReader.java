@@ -5,12 +5,16 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.Properties;
 
 /**
- * Reads values from config.properties.
- * A JVM system property with the same key wins, so any value can be overridden per run:
- *   mvn test -Dbrowser=edge -Dprivate.mode=true
+ * Reads settings in three layers, each one overriding the one before:
+ *   1. config.properties                       - shared settings (browser, timeouts, ...)
+ *   2. environments/&lt;env&gt;.properties          - per-environment settings (URL, data sheet, ...)
+ *   3. JVM system properties (-Dkey=value)     - per-run overrides
+ *
+ * The environment comes from "env" (default qa), e.g. mvn test -Denv=uat
  */
 public final class ConfigReader {
 
@@ -22,17 +26,29 @@ public final class ConfigReader {
 
     private static Properties load() {
         Properties props = new Properties();
-        try (InputStream in = ConfigReader.class.getClassLoader()
-                .getResourceAsStream(FrameworkConstants.CONFIG_FILE)) {
+        loadInto(props, FrameworkConstants.CONFIG_FILE);
+
+        String env = System.getProperty("env", props.getProperty("env", "qa")).trim().toLowerCase(Locale.ROOT);
+        props.setProperty("env", env);
+        loadInto(props, FrameworkConstants.ENVIRONMENTS_DIR + "/" + env + ".properties");
+        LOG.info("Environment: {}", env);
+        return props;
+    }
+
+    private static void loadInto(Properties props, String resource) {
+        try (InputStream in = ConfigReader.class.getClassLoader().getResourceAsStream(resource)) {
             if (in == null) {
-                throw new IllegalStateException(FrameworkConstants.CONFIG_FILE + " not found on the classpath");
+                throw new IllegalStateException(resource + " not found on the classpath");
             }
             props.load(in);
         } catch (IOException e) {
-            throw new IllegalStateException("Could not read " + FrameworkConstants.CONFIG_FILE, e);
+            throw new IllegalStateException("Could not read " + resource, e);
         }
-        LOG.info("Loaded {}", FrameworkConstants.CONFIG_FILE);
-        return props;
+    }
+
+    /** The environment this run targets: qa, sit, uat, ... */
+    public static String getEnv() {
+        return get("env");
     }
 
     /** Returns the value for key, or throws if it is missing everywhere. */
@@ -51,6 +67,21 @@ public final class ConfigReader {
         }
         String value = PROPERTIES.getProperty(key);
         return (value == null || value.isBlank()) ? defaultValue : value.trim();
+    }
+
+    /**
+     * Secret from an environment variable, falling back to a config key / -D property.
+     * Throws with a clear message when neither is set.
+     */
+    public static String getSecret(String envVar, String configKey) {
+        String value = System.getenv(envVar);
+        if (value == null || value.isBlank()) {
+            value = get(configKey, null);
+        }
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException("Set the " + envVar + " environment variable");
+        }
+        return value;
     }
 
     public static int getInt(String key, int defaultValue) {

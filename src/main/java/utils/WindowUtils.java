@@ -1,7 +1,6 @@
 package utils;
 
 import base.DriverFactory;
-import constants.FrameworkConstants;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchWindowException;
@@ -9,9 +8,7 @@ import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WindowType;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.time.Duration;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -36,11 +33,6 @@ public final class WindowUtils {
         return DriverFactory.getDriver();
     }
 
-    private static WebDriverWait getWait() {
-        return new WebDriverWait(driver(), Duration.ofSeconds(
-                ConfigReader.getInt("explicit.wait", FrameworkConstants.DEFAULT_EXPLICIT_WAIT_SECONDS)));
-    }
-
     public static String getCurrentHandle() {
         return driver().getWindowHandle();
     }
@@ -50,7 +42,7 @@ public final class WindowUtils {
     }
 
     public static void waitForWindowCount(int count) {
-        getWait().until(ExpectedConditions.numberOfWindowsToBe(count));
+        WaitUtils.getWait().until(ExpectedConditions.numberOfWindowsToBe(count));
     }
 
     /**
@@ -58,7 +50,7 @@ public final class WindowUtils {
      * Call getCurrentHandle() before the action that opens the pop-up.
      */
     public static String switchToNewWindow(String originalHandle) {
-        String handle = getWait().until(d -> d.getWindowHandles().stream()
+        String handle = WaitUtils.getWait().until(d -> d.getWindowHandles().stream()
                 .filter(h -> !h.equals(originalHandle))
                 .findFirst()
                 .orElse(null));
@@ -82,7 +74,7 @@ public final class WindowUtils {
     private static void switchToWindowMatching(Predicate<WebDriver> matcher, String description) {
         String original = getCurrentHandle();
         try {
-            getWait().until(d -> {
+            WaitUtils.getWait().until(d -> {
                 for (String handle : d.getWindowHandles()) {
                     d.switchTo().window(handle);
                     if (matcher.test(d)) {
@@ -130,11 +122,11 @@ public final class WindowUtils {
     // ==================== Frames ====================
 
     public static void switchToFrame(By frameLocator) {
-        getWait().until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(frameLocator));
+        WaitUtils.getWait().until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(frameLocator));
     }
 
     public static void switchToFrame(String nameOrId) {
-        getWait().until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(nameOrId));
+        WaitUtils.getWait().until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(nameOrId));
     }
 
     public static void switchToParentFrame() {

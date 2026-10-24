@@ -23,29 +23,36 @@ public final class ScreenshotUtil {
     private ScreenshotUtil() {
     }
 
-    /** Saves a PNG under reports/screenshots and returns its path, or null if it failed. */
-    public static Path capture(String name) {
+    /** PNG of the current page, or null if the browser could not take one. */
+    public static byte[] captureBytes() {
         try {
-            byte[] png = ((TakesScreenshot) DriverFactory.getDriver()).getScreenshotAs(OutputType.BYTES);
+            return ((TakesScreenshot) DriverFactory.getDriver()).getScreenshotAs(OutputType.BYTES);
+        } catch (RuntimeException e) {
+            LOG.warn("Could not capture screenshot: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /** Saves a PNG under reports/screenshots and returns its path, or null if it failed. */
+    public static Path save(String name, byte[] png) {
+        if (png == null) {
+            return null;
+        }
+        try {
             Files.createDirectories(FrameworkConstants.SCREENSHOTS_DIR);
             String fileName = name.replaceAll("[^a-zA-Z0-9._-]", "_") + "_" + LocalDateTime.now().format(TIMESTAMP) + ".png";
             Path target = FrameworkConstants.SCREENSHOTS_DIR.resolve(fileName);
             Files.write(target, png);
             LOG.info("Screenshot saved: {}", target);
             return target;
-        } catch (IOException | RuntimeException e) {
-            LOG.warn("Could not capture screenshot '{}': {}", name, e.getMessage());
+        } catch (IOException e) {
+            LOG.warn("Could not save screenshot '{}': {}", name, e.getMessage());
             return null;
         }
     }
 
-    /** Base64 PNG, handy for embedding straight into the HTML report. */
-    public static String captureBase64() {
-        try {
-            return ((TakesScreenshot) DriverFactory.getDriver()).getScreenshotAs(OutputType.BASE64);
-        } catch (RuntimeException e) {
-            LOG.warn("Could not capture base64 screenshot: {}", e.getMessage());
-            return null;
-        }
+    /** Takes a screenshot and saves it under reports/screenshots. */
+    public static Path capture(String name) {
+        return save(name, captureBytes());
     }
 }

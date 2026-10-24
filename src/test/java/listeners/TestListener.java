@@ -14,6 +14,13 @@ import org.testng.ITestResult;
 import utils.ConfigReader;
 import utils.LoggerUtil;
 import utils.ScreenshotUtil;
+import utils.TagFilter;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Logs each test, builds the Extent HTML report (reports/ExtentReport.html) and
@@ -37,10 +44,14 @@ public class TestListener implements ITestListener, ISuiteListener {
 
         extent = new ExtentReports();
         extent.attachReporter(spark);
+        extent.setSystemInfo("Environment", ConfigReader.getEnv().toUpperCase());
         extent.setSystemInfo("Base URL", ConfigReader.get("base.url", ""));
         extent.setSystemInfo("Browser", ConfigReader.get("browser", "chrome"));
         extent.setSystemInfo("Private mode", ConfigReader.get("private.mode", "false"));
         extent.setSystemInfo("Execution", ConfigReader.get("execution", "local"));
+        if (TagFilter.isFiltering()) {
+            extent.setSystemInfo("Tags", String.join(", ", TagFilter.activeTags()));
+        }
     }
 
     @Override
@@ -75,11 +86,11 @@ public class TestListener implements ITestListener, ISuiteListener {
         test.fail(result.getThrowable());
 
         if (ConfigReader.getBoolean("screenshot.on.failure", true)) {
-            ScreenshotUtil.capture(name);
-            String base64 = ScreenshotUtil.captureBase64();
-            if (base64 != null) {
-                test.fail("Screenshot at failure",
-                        MediaEntityBuilder.createScreenCaptureFromBase64String(base64).build());
+            byte[] png = ScreenshotUtil.captureBytes();
+            if (png != null) {
+                ScreenshotUtil.save(name, png);
+                test.fail("Screenshot at failure", MediaEntityBuilder
+                        .createScreenCaptureFromBase64String(Base64.getEncoder().encodeToString(png)).build());
             }
         }
         CURRENT_TEST.remove();
@@ -104,7 +115,21 @@ public class TestListener implements ITestListener, ISuiteListener {
         }
     }
 
+    /** "nanditha-0345 | LoginTest.validLogin": Jira IDs from groups or the Excel row come first. */
     private static String testName(ITestResult result) {
-        return result.getTestClass().getRealClass().getSimpleName() + "." + result.getMethod().getMethodName();
+        String name = result.getTestClass().getRealClass().getSimpleName() + "." + result.getMethod().getMethodName();
+        String ids = jiraIds(result);
+        return ids.isEmpty() ? name : ids + " | " + name;
+    }
+
+    private static String jiraIds(ITestResult result) {
+        List<String> ids = new ArrayList<>();
+        Arrays.stream(result.getMethod().getGroups()).filter(TagFilter::isJiraKey).forEach(ids::add);
+        for (Object parameter : result.getParameters()) {
+            if (parameter instanceof Map<?, ?> row && row.get("TestCaseId") instanceof String id && TagFilter.isJiraKey(id)) {
+                ids.add(id);
+            }
+        }
+        return String.join(", ", ids);
     }
 }

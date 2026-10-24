@@ -35,14 +35,7 @@ public final class MfaUtils {
 
     /** Code for the secret in the MFA_SECRET environment variable, or mfa.secret in config. */
     public static String getCode() {
-        String secret = System.getenv("MFA_SECRET");
-        if (secret == null || secret.isBlank()) {
-            secret = ConfigReader.get("mfa.secret", null);
-        }
-        if (secret == null || secret.isBlank()) {
-            throw new IllegalStateException("Set the MFA_SECRET environment variable to generate MFA codes");
-        }
-        return getCode(secret);
+        return getCode(ConfigReader.getSecret("MFA_SECRET", "mfa.secret"));
     }
 
     /**

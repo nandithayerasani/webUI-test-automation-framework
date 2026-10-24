@@ -13,6 +13,11 @@ pr:
       - main
 
 parameters:
+  - name: env
+    displayName: Environment
+    type: string
+    default: qa
+    values: [qa, sit, uat]
   - name: browser
     displayName: Browser
     type: string
@@ -52,6 +57,7 @@ steps:
       goals: clean test
       options: >-
         -B
+        -Denv=${{ parameters.env }}
         -DsuiteXmlFile=${{ parameters.suite }}
         -Dbrowser=${{ parameters.browser }}
         -Dprivate.mode=${{ parameters.privateMode }}
@@ -61,7 +67,7 @@ steps:
       jdkVersionOption: '1.17'
       publishJUnitResults: true
       testResultsFiles: '**/surefire-reports/TEST-*.xml'
-      testRunTitle: 'Web UI - ${{ parameters.browser }}'
+      testRunTitle: 'Web UI - ${{ parameters.env }} - ${{ parameters.browser }}'
     env:
       # Secret variables are not exposed to scripts unless mapped explicitly.
       BROWSERSTACK_USERNAME: $(BROWSERSTACK_USERNAME)
