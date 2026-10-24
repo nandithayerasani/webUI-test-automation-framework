@@ -1,14 +1,9 @@
 package utils;
 
-import base.DriverFactory;
-import constants.FrameworkConstants;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-
-import java.time.Duration;
 
 /**
  * Handles JavaScript pop-ups: alert(), confirm() and prompt().
@@ -22,19 +17,14 @@ public final class AlertUtils {
     private AlertUtils() {
     }
 
-    private static Alert waitForAlert(int seconds) {
-        return new WebDriverWait(DriverFactory.getDriver(), Duration.ofSeconds(seconds))
-                .until(ExpectedConditions.alertIsPresent());
-    }
-
     public static Alert waitForAlert() {
-        return waitForAlert(ConfigReader.getInt("explicit.wait", FrameworkConstants.DEFAULT_EXPLICIT_WAIT_SECONDS));
+        return WaitUtils.getWait().until(ExpectedConditions.alertIsPresent());
     }
 
     /** True if an alert shows up within the given seconds. Never throws. */
     public static boolean isAlertPresent(int seconds) {
         try {
-            waitForAlert(seconds);
+            WaitUtils.getWait(seconds).until(ExpectedConditions.alertIsPresent());
             return true;
         } catch (TimeoutException e) {
             return false;

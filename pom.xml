@@ -18,6 +18,8 @@
         <log4j.version>2.24.1</log4j.version>
         <extentreports.version>5.1.2</extentreports.version>
         <jackson.version>2.18.0</jackson.version>
+        <angus-mail.version>2.0.3</angus-mail.version>
+        <poi.version>5.3.0</poi.version>
 
         <!-- Override from the command line: mvn test -DsuiteXmlFile=src/test/resources/other.xml -->
         <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
@@ -46,7 +48,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j2-impl</artifactId>
+            <artifactId>log4j-slf4j-impl</artifactId>
             <version>${log4j.version}</version>
         </dependency>
         <dependency>
@@ -58,6 +60,18 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
+        </dependency>
+        <!-- Apache POI for the Excel test data sheet -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${poi.version}</version>
+        </dependency>
+        <!-- Jakarta Mail (IMAP) for reading OTP emails -->
+        <dependency>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>angus-mail</artifactId>
+            <version>${angus-mail.version}</version>
         </dependency>
     </dependencies>
 

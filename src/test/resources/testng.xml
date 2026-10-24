@@ -3,6 +3,7 @@
 
     <listeners>
         <listener class-name="listeners.TestListener"/>
+        <listener class-name="listeners.TagInterceptor"/>
     </listeners>
 
     <!--
@@ -21,6 +22,8 @@
     <test name="Framework unit tests">
         <classes>
             <class name="tests.unit.MfaUtilsTest"/>
+            <class name="tests.unit.OtpExtractorTest"/>
+            <class name="tests.unit.TestDataReaderTest"/>
         </classes>
     </test>
 

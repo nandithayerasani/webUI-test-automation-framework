@@ -2,7 +2,6 @@ package pages;
 
 import base.BasePage;
 import org.openqa.selenium.By;
-import utils.ConfigReader;
 
 public class LoginPage extends BasePage {
 
@@ -13,11 +12,6 @@ public class LoginPage extends BasePage {
     private static final By ERROR_MESSAGE  = xpath("//h3[@data-test='error']");
     private static final By LOGIN_LOGO     = xpath("//div[@class='login_logo']");
     // ==========================================================
-
-    public LoginPage open() {
-        driver.get(ConfigReader.get("base.url"));
-        return this;
-    }
 
     public boolean isLoaded() {
         return isDisplayed(LOGIN_BUTTON);

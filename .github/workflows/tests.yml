@@ -1,0 +1,52 @@
+# Runs the suite headless on every push and pull request.
+# Start a run by hand from the Actions tab to pick another environment or browser.
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: Environment
+        type: choice
+        options: [qa, sit, uat]
+        default: qa
+      browser:
+        description: Browser
+        type: choice
+        options: [chrome, edge, firefox]
+        default: chrome
+      tags:
+        description: Jira IDs or groups to run, comma separated (blank runs everything)
+        required: false
+        default: ''
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Run tests
+        # Inputs go through env vars, not straight into the script, so a typed value can't inject shell commands.
+        env:
+          TEST_ENV: ${{ inputs.env || 'qa' }}
+          BROWSER: ${{ inputs.browser || 'chrome' }}
+          TAGS: ${{ inputs.tags || '' }}
+        run: |
+          chmod +x mvnw
+          ./mvnw -B clean test -Dheadless=true "-Denv=$TEST_ENV" "-Dbrowser=$BROWSER" "-Dtags=$TAGS"
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extent-report
+          path: reports/

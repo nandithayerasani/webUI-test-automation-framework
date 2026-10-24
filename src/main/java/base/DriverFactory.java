@@ -6,6 +6,7 @@ import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.chromium.ChromiumOptions;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -110,34 +111,10 @@ public final class DriverFactory {
         List<String> extraArgs = extraArguments(browser);
 
         switch (browser) {
-            case CHROME: {
-                ChromeOptions options = new ChromeOptions();
-                options.setExperimentalOption("prefs", passwordManagerOffPrefs());
-                options.addArguments("--disable-features=PasswordLeakDetection");
-                if (privateMode) {
-                    options.addArguments("--incognito");
-                }
-                if (headless) {
-                    options.addArguments("--headless=new");
-                }
-                options.addArguments("--window-size=1920,1080");
-                options.addArguments(extraArgs);
-                return options;
-            }
-            case EDGE: {
-                EdgeOptions options = new EdgeOptions();
-                options.setExperimentalOption("prefs", passwordManagerOffPrefs());
-                options.addArguments("--disable-features=PasswordLeakDetection");
-                if (privateMode) {
-                    options.addArguments("-inprivate");
-                }
-                if (headless) {
-                    options.addArguments("--headless=new");
-                }
-                options.addArguments("--window-size=1920,1080");
-                options.addArguments(extraArgs);
-                return options;
-            }
+            case CHROME:
+                return chromiumOptions(new ChromeOptions(), "--incognito", privateMode, headless, extraArgs);
+            case EDGE:
+                return chromiumOptions(new EdgeOptions(), "-inprivate", privateMode, headless, extraArgs);
             case FIREFOX: {
                 FirefoxOptions options = new FirefoxOptions();
                 if (privateMode) {
@@ -152,6 +129,22 @@ public final class DriverFactory {
             default:
                 throw new IllegalArgumentException("Unsupported browser: " + browser);
         }
+    }
+
+    /** Chrome and Edge share the Chromium options; only the private-mode flag differs. */
+    private static <T extends ChromiumOptions<?>> T chromiumOptions(T options, String privateFlag, boolean privateMode,
+                                                                    boolean headless, List<String> extraArgs) {
+        options.setExperimentalOption("prefs", passwordManagerOffPrefs());
+        options.addArguments("--disable-features=PasswordLeakDetection");
+        if (privateMode) {
+            options.addArguments(privateFlag);
+        }
+        if (headless) {
+            options.addArguments("--headless=new");
+        }
+        options.addArguments("--window-size=1920,1080");
+        options.addArguments(extraArgs);
+        return options;
     }
 
     /**
@@ -191,8 +184,7 @@ public final class DriverFactory {
     private static void configure(WebDriver driver) {
         int pageLoad = ConfigReader.getInt("page.load.timeout", FrameworkConstants.DEFAULT_PAGE_LOAD_TIMEOUT_SECONDS);
         driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(pageLoad));
-        // Implicit wait stays at 0 on purpose: mixing it with explicit waits causes unpredictable delays.
-        driver.manage().timeouts().implicitlyWait(Duration.ZERO);
+        // Implicit wait is left at its default of 0 on purpose: mixing it with explicit waits causes unpredictable delays.
         if (!ConfigReader.getBoolean("headless", false)) {
             driver.manage().window().maximize();
         }
